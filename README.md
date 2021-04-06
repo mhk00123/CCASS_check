@@ -4,6 +4,7 @@ A program can check CCASS data : Top5%, Top10%, Stake in CCASS%, Holders......
 ## Features
 
 - 快速查詢過3個月CCASS的資料：
+- 股價
 - Top5, Top10持倉比例
 - 流通股量
 - Holder數量
