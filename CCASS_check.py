@@ -2,6 +2,14 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import time 
+import ssl
+import threading as td
+from concurrent.futures import ThreadPoolExecutor
+
+
+ssl._create_default_https_context = ssl._create_unverified_context
+
+headers = {'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.71 Safari/537.36'}
 
 # 輸入股票Number
 def input_stock_num():
@@ -10,6 +18,10 @@ def input_stock_num():
         return 0
     
     return stock_num
+
+def pdread(url):
+    data = pd.read_html(url)
+    return data
 
 # 取得資料
 def data_scrapy(stock_num):
@@ -32,9 +44,19 @@ def data_scrapy(stock_num):
     start_time = time.time()
     print("2. 爬取資料")
 
-    top10_read = pd.read_html(url_1)
-    holders_read = pd.read_html(url_2)
-    price_read = pd.read_html(url_3)
+    # 創建3個線程池
+    pool = ThreadPoolExecutor(max_workers=3)
+
+    # 向線程池提交任務
+    future1 = pool.submit(pdread, url_1)
+    future2 = pool.submit(pdread, url_2)
+    future3 = pool.submit(pdread, url_3)
+
+    top10_read = future1.result()
+    holders_read = future2.result()
+    price_read = future3.result()
+    
+    pool.shutdown()
     end_time = time.time()
 
     print("2. 爬取資料完成")
@@ -82,6 +104,7 @@ def data_scrapy(stock_num):
     print("執行時間：%f 秒\n" % (end_time - start_time))
 
     print(df)
+    
     return df
 
 # 畫圖
@@ -102,8 +125,11 @@ if __name__ == "__main__":
         
         if(stock_num == 0):
             break
-
+        
+        rs = data_scrapy(stock_num)
+        print("RS pass")
+        
         try:
-            draw_io(data_scrapy(stock_num), stock_num)
+            draw_io(rs, stock_num)
         except:
             print("查無此股票\n")
